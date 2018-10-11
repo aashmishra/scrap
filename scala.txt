@@ -1,0 +1,527 @@
+http://spark.apache.org/downloads.html
+https://youtu.be/V9E-bWarMNw
+https://spoddutur.github.io/spark-notes/distribution_of_executors_cores_and_memory_for_spark_application.html
+
+
+http://tipsonubuntu.com/2016/07/31/install-oracle-java-8-9-ubuntu-16-04-linux-mint-18/
+Add the PPA.
+sudo add-apt-repository ppa:webupd8team/java
+
+Update and install the installer script:
+sudo apt update; sudo apt install oracle-java8-installer
+
+
+sudo apt install oracle-java8-set-default
+
+The launch scripts located at %SPARK_HOME%\sbin do not support Windows. You need to manually run the master and worker as outlined below.
+
+Go to %SPARK_HOME%\bin folder in a command prompt
+
+Run spark-class org.apache.spark.deploy.master.Master to run the master. This will give you a URL of the form spark://ip:port
+
+Run spark-class org.apache.spark.deploy.worker.Worker spark://ip:port to run the worker. Make sure you use the URL you obtained in step 2.
+
+Run spark-shell --master spark://ip:port to connect an application to the newly created cluster.
+
+
+
+
+spark-shell --master spark://192.168.1.2:7077 --num-executors 3
+
+spark-shell --num-executors 3
+
+
+sudo service hive-metastore status
+sudo service hive-server2 status
+
+
+
+import java.util.Properties
+
+val sqlContext = spark.sqlContext
+
+val sqcon=SQLContext(sc)
+
+val sqlContext = new org.apache.spark.sql.SQLContext(sc)
+
+
+val fn = sqlContext.read.format("com.databricks.spark.csv").option("header","true").option("inferchema","true").load("/tmp/abc.csv")
+val prop = new Properties()
+prop.setProperty("user", "root")
+prop.setProperty("password", "hadoop")
+
+spark-shell  --master spark://192.168.1.2:7077 --driver-class-path /usr/share/java/mysql-connector-java-5.1.28.jar
+
+
+fn.write.mode("append").option("driver", "com.mysql.jdbc.Driver").jdbc(s"jdbc:mysql://namenode1:3306/test", "c",prop)
+
+
+
+
+val df_jdbc_mysql = sqlContext.read.format("jdbc").option("url", "jdbc:mysql://namenode1:3306/test").option("driver", "com.mysql.jdbc.Driver").option("dbtable", "c").option("user", "root").option("password", "hadoop").load()
+
+---------------------------------------------------------
+
+
+import java.util.Properties
+val sqlContext = new org.apache.spark.sql.SQLContext(sc)
+val fn = sqlContext.read.format("com.databricks.spark.csv").option("header","true").option("inferchema","true").load("/tmp/abc.csv")
+val prop = new Properties()
+prop.setProperty("user", "root")
+prop.setProperty("password", "hadoop")
+fn.write.mode("append").option("Driver", "com.mysql.jdbc.Driver").jdbc(s"jdbc:mysql://namenode1:3306/test", "c",prop)
+
+spark-shell  --master spark://192.168.1.2:7077 --driver-class-path /usr/share/java/mysql-connector-java-5.1.28.jar
+
+
+fn.write.mode("append").option("driver", "com.mysql.jdbc.Driver").jdbc(s"jdbc:mysql://namenode1:3306/test", "c",prop)
+--------------------------------------------------------------
+
+val jdbcDF = spark.read.format("jdbc").options(
+  Map("url" ->  "jdbc:mysql://namenode1:3306/test?user=root&password=hadoop",
+  "dbtable" -> "test.c",
+  "fetchSize" -> "10000"
+  )).load()
+jdbcDF.createOrReplaceTempView("test")
+
+------------------------------------------------------
+
+
+val prop = new java.util.Properties
+val sqlContext = new org.apache.spark.sql.SQLContext(sc)
+val fn = sqlContext.read.format("com.databricks.spark.csv").option("header","true").option("inferchema","true").load("/tmp/abc.csv")
+prop.setProperty("driver", "com.mysql.jdbc.Driver")
+prop.setProperty("user", "root")
+prop.setProperty("password", "hadoop") 
+val url = "jdbc:mysql://namenode1:3306/test"
+val table = "c"
+fn.write.mode("append").jdbc(url, table, prop)
+
+-------------------------------------
+
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkConf
+import org.apache.spark.sql.SparkSession
+object  mapTest{
+def main(args: Array[String]) = {
+val spark = SparkSession.builder.appName("mapExample").master("namenode1").getOrCreate()
+val data = spark.read.textFile("/tmp/abc.csv").rdd
+val mapFile = data.map(line => (line,line.length))
+mapFile.foreach(println)
+}
+}
+------------------------
+
+
+-------------------
+
+val spark = SparkSession.builder.appName("mapExample").master("namenode1").getOrCreate()
+val data = spark.read.textFile("/tmp/abc.csv").rdd
+val flatmapFile = data.flatMap(lines => lines.split(" "))
+flatmapFile.foreach(println)
+
+--------------------------------
+
+
+myRDD.collect().foreach(println)
+
+myRDD.take(n).foreach(println)
+
+linesWithSessionId.toArray().foreach(line => println(line))
+
+fruits.toDF().show()
+
+rdd.saveAsTextFile("alicia.txt")
+---------------------------
+
+val lines = sc.textFile("text.txt");
+val Length = lines.map(s => s.length)
+Length.collect()
+lines.count()
+
+
+--------------------------------
+
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkConf
+import org.apache.spark.sql.SparkSession
+def ltrim(s: String) = s.replaceAll("^\\s+", "")
+def rtrim(s: String) = s.replaceAll("\\s+$", "")
+object  mapTest{
+def main(args: Array[String]) = {
+val spark = SparkSession.builder.appName("mapExample").master("namenode1").getOrCreate()
+val data = spark.read.textFile("/tmp/abc.csv").rdd
+val flatmapFile = data.flatMap(lines => lines.split(","))
+val b = ltrim(flatmapFile)
+b.collect()
+}
+
+-------------------------
+
+object  Maptest{
+def main(args: Array[String]) = {
+val spark = SparkSession.builder.appName("mapExample").master("namenode1").getOrCreate()
+val data = spark.read.textFile("/tmp/abc.csv").rdd
+val flatmapFile = data.flatMap(lines => lines.split(","))
+val b = flatmapFile.replaceAll("^\\s+", "").replaceAll("^\\s+", "")
+b.collect()
+}
+}
+
+---------------------------------
+
+
+
+
+val prop = new java.util.Properties
+val sqlContext = new org.apache.spark.sql.SQLContext(sc)
+val fn = sqlContext.read.format("com.databricks.spark.csv").option("header","true").option("inferchema","true").load("/tmp/abc.csv")
+
+
+
+val df1 = spark.read.format("com.databricks.spark.csv").option("header","true").option("inferchema","true").load("/tmp/abc.csv")
+
+
+-------------------
+
+
+Using Scala version 2.11.8 (OpenJDK 64-Bit Server VM, Java 1.8.0_162)
+Type in expressions to have them evaluated.
+Type :help for more information.
+
+scala> val prop = new java.util.Properties
+prop: java.util.Properties = {}
+
+scala> val sqlContext = new org.apache.spark.sql.SQLContext(sc)
+warning: there was one deprecation warning; re-run with -deprecation for details
+sqlContext: org.apache.spark.sql.SQLContext = org.apache.spark.sql.SQLContext@2bc21edd
+
+scala> val fn = sqlContext.read.format("com.databricks.spark.csv").option("header","true").option("inferchema","true").load("/tmp/abc.csv")
+fn: org.apache.spark.sql.DataFrame = [id: string, address: string]
+
+scala> prop.setProperty("driver", "com.mysql.jdbc.Driver")
+res0: Object = null
+
+scala> prop.setProperty("user", "root")
+res1: Object = null
+
+scala> prop.setProperty("password", "hadoop") 
+res2: Object = null
+
+scala> val url = "jdbc:mysql://namenode1:3306/test"
+url: String = jdbc:mysql://namenode1:3306/test
+
+scala> val table = "c"
+table: String = c
+
+scala> fn.write.mode("append").jdbc(url, table, prop)
+
+scala> val df1 = spark.read.format("com.databricks.spark.csv").option("header","true").option("inferchema","true").load("/tmp/abc.csv")
+df1: org.apache.spark.sql.DataFrame = [id: string, address: string]
+
+scala> df1.show()
++---+--------+
+| id| address|
++---+--------+
+| 99|   DElhi|
+| 89|Hydrabad|
+| 78| chennai|
+| 89|     ddd|
++---+--------+
+
+
+scala> val df2 = df1.with
+withColumn   withColumnRenamed   withWatermark
+
+scala> val df2 = df1.with
+withColumn   withColumnRenamed   withWatermark
+
+scala> val df2 = df1.with
+withColumn   withColumnRenamed   withWatermark
+
+scala> val df2 = df1.withColumn
+withColumn   withColumnRenamed
+
+scala> val df2 = df1.withColumn("mobile",lit("9878676757  "))
+df2: org.apache.spark.sql.DataFrame = [id: string, address: string ... 1 more field]
+
+scala> df2.show
++---+--------+------------+
+| id| address|      mobile|
++---+--------+------------+
+| 99|   DElhi|9878676757  |
+| 89|Hydrabad|9878676757  |
+| 78| chennai|9878676757  |
+| 89|     ddd|9878676757  |
++---+--------+------------+
+
+
+scala> val df3 = df2.withColumn("mobile",rtrim(ltrim(col("mobile"))))
+df3: org.apache.spark.sql.DataFrame = [id: string, address: string ... 1 more field]
+
+scala> df3.show()
++---+--------+----------+
+| id| address|    mobile|
++---+--------+----------+
+| 99|   DElhi|9878676757|
+| 89|Hydrabad|9878676757|
+| 78| chennai|9878676757|
+| 89|     ddd|9878676757|
++---+--------+----------+
+
+
+
+
+
+
+prop.setProperty("driver", "com.mysql.jdbc.Driver")
+prop.setProperty("user", "root")
+prop.setProperty("password", "hadoop") 
+val url = "jdbc:mysql://namenode1:3306/test"
+val table = "c"
+fn.write.mode("append").jdbc(url, table, prop)
+
+----------------------------------------------------
+
+
+val df1 = spark.read.format("com.databricks.spark.csv").option("header","true").option("inferchema","true").load("/tmp/abc.csv")
+
+
+val data = spark.read.textFile("/tmp/data.txt")
+val flatmapFile = data.flatMap(lines => lines.split("|")).map(l=>(l,1))
+
+=---------------------------------------------
+
+
+def dfSchema(columnNames: List[String]): StructType =
+  StructType(
+    Seq(
+      StructField(name = "name", dataType = StringType, nullable = false),
+      StructField(name = "age", dataType = IntegerType, nullable = false)
+    )
+  )
+
+def row(line: List[String]): Row = Row(line(0), line(1).toInt)
+
+val rdd: RDD[String] = ...
+val schema = dfSchema(Seq("name", "age"))
+val data = rdd.map(_.split(",").to[List]).map(row)
+val dataFrame = spark.createDataFrame(data1, schema)
+
+
+---------------------------------------------------------------
+
+import org.apache.spark.sql.types.{StructField, StructType}
+
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkConf
+
+import org.apache.spark.ml.clustering.LDA
+import org.apache.spark.mllib.linalg.{VectorUDT, Vectors}
+import org.apache.spark.sql.{Row, SQLContext}
+import org.apache.spark.sql.types.{StringType, StructField, StructType}
+
+val schema = StructType ( List(StructField( "name",StringType,true),StructField("address",StringType, true),StructField("mobile",StringType, true),StructField("num",StringType, true)))
+
+val data1 = data.map(_.split("\\|").to[List]).map(row)
+
+val datatab = spark.sparkContext.textFile("/tmp/tabdel.txt")
+val fm = datatab.map(lines => lines.split("	")).map(l=>Row.fromSeq(l))
+
+
+
+
+val fm1 = spark.sqlContext.createDataFrame(fm, schema)
+
+-----------------------------------------------------------------
+
+
+scala> val datatab = spark.sparkContext.textFile("/tmp/tabdel.txt")
+datatab: org.apache.spark.rdd.RDD[String] = /tmp/tabdel.txt MapPartitionsRDD[48] at textFile at <console>:28
+
+scala> datatab.collect()
+res22: Array[String] = Array(alam       okhla   25      12, ashish      geeta   12	24)
+
+scala> val schema = StructType ( List(StructField( "name",StringType,true),StructField("address",StringType, true),StructField("mobile",StringType, true),StructField("num",StringType, true)))
+schema: org.apache.spark.sql.types.StructType = StructType(StructField(name,StringType,true), StructField(address,StringType,true), StructField(mobile,StringType,true), StructField(num,StringType,true))
+
+scala> val fm = datatab.map(lines => lines.split("\t")).map(l=>Row(l(0),l(1),l(2),l(3)))
+fm: org.apache.spark.rdd.RDD[org.apache.spark.sql.Row] = MapPartitionsRDD[50] at map at <console>:30
+
+scala> fm.collect()
+res23: Array[org.apache.spark.sql.Row] = Array([alam,okhla,25,12], [ashish,geeta,12,24])
+
+scala> val fm1 = spark.sqlContext.createDataFrame(fm, schema)
+fm1: org.apache.spark.sql.DataFrame = [name: string, address: string ... 2 more fields]
+
+scala> fm1.show
++------+-------+------+---+
+|  name|address|mobile|num|
++------+-------+------+---+
+|  alam|  okhla|    25| 12|
+|ashish|  geeta|    12| 24|
++------+-------+------+---+
+
+
+
+---------------------------------------------------------
+scala> val datatab = spark.sparkContext.textFile("/tmp/tabdel.txt")
+scala> datatab.collect()
+scala> val schema = StructType ( List(StructField( "name",StringType,true),StructField("address",StringType, true),StructField("mobile",StringType, true),StructField("num",StringType, true)))
+scala> val fm = datatab.map(lines => lines.split("\t")).map(l=>Row(l(0),l(1),l(2),l(3)))
+scala> val fm1 = spark.sqlContext.createDataFrame(fm, schema)
+scala> val fm2 = spark.sqlContext.createDataFrame(fm, schema)
+
+scala> val jdbcDF = spark.read.format("jdbc").options(
+     |   Map("url" ->  "jdbc:mysql://namenode1:3306/test?user=root&password=hadoop",
+     |   "dbtable" -> "test.c",
+     |   "fetchSize" -> "10000"
+     |   )).load()
+jdbcDF: org.apache.spark.sql.DataFrame = [id: int, address: string]
+
+scala> jdbcDF.createOrReplaceTempView("test")
+
+scala> val sqlDF = sql("select * from test")
+sqlDF: org.apache.spark.sql.DataFrame = [id: int, address: string]
+
+scala> sqlDF.show()
++---+-------+
+| id|address|
++---+-------+
+|  1|      A|
+|  2|      B|
+|  3|      C|
+|  4|      D|
++---+-------+
+
+-----------------------------------------------------------------------
+
+
+val survey = spark.read.format("com.databricks.spark.csv").option("header","true").option("nullValue","NA").option("timestampFormat","yyyy-MM-dd'T'HH:mm:ss").option("mode","failfast").option("inferchema","true").load("/tmp/survey.csv")
+
+val survey1=survey.select($"Gender",$"treatment")
+
+
+val survey2=survey1.select($"Gender",
+(when(col("treatment")===lit("Yes"),1).otherwise(0)).alias("All-Yes"),
+(when(col("treatment")===lit("No"),1).otherwise(0)).alias("All-Nos")
+)
+
+val survey3= survey2.groupBy("Gender").agg(sum($"All-Yes"),sum($"All-Nos"))
+
+
+:paste
+
+def parseGender(g: String) = {  
+                g.toLowerCase match {
+                    case "male" | "m" | "male-ish" | "maile" |
+                         "mal" | "male (cis)" | "make" | "male " |
+                         "man" | "msle" | "mail" | "malr" |
+                         "cis man" | "cis male" => "Male"
+                    case "cis female" | "f" | "female" |
+                         "woman" |  "femake" | "female " |
+                         "cis-female/femme" | "female (cis)" |
+                         "femail" => "Female"
+                    case _ => "Transgender"
+                }
+    } 
+	
+	
+	
+val parseGenderUDF = udf( parseGender _ )
+	
+val survey4 = survey2.select((parseGenderUDF($"Gender")).alias("Gender"),$"All-Yes",$"All-Nos") 
+
+
+val survey5= survey4.groupBy("Gender").agg(sum($"All-Yes"),sum($"All-Nos"))
+
+
+----------------------------------------------------------------------------
+
+
+
+
+
+survey.rdd.getNumPartitions
+
+val surveyp = survey.repartition(5).toDF()
+
+surveyp.printSchema
+
+-------------------------------------------------
+
+scala> survey.createOrReplaceTempView("survey_tbl")
+
+scala> spark.sql("""select gender, sum(yes), sum(no) 
+     |             from (select case when lower(trim(gender)) in ('male','m','male-ish','maile','mal',
+     |                                                            'male (cis)','make','male ','man','msle',
+     |                                                            'mail','malr','cis man','cis male') 
+     |                               then 'Male' 
+     |                               when lower(trim(gender)) in ('cis female','f','female','woman',
+     |                                                            'female','female ','cis-female/femme',
+     |                                                            'female (cis)','femail') 
+     |                               then 'Female'
+     |                               else 'Transgender' 
+     |                               end as gender,
+     |                               case when treatment == 'Yes' then 1 else 0 end as yes,
+     |                               case when treatment == 'No' then 1 else 0 end as no
+     |                   from survey_tbl) 
+     |          where gender != 'Transgender'
+     |          group by gender""").show
++------+--------+-------+                                                       
+|gender|sum(yes)|sum(no)|
++------+--------+-------+
+|Female|     170|     76|
+|  Male|     450|    541|
++------+--------+-------+
+
+
+--------------------------------------------------------------
+
+Why is
+
+for (
+  a <- 1 to 1000;
+  b <- 1 to 1000 - a;
+  c <- 1 to 1000 - a - b;
+  if (a * a + b * b == c * c && a + b + c == 1000)
+) println((a, b, c, a * b * c))
+266 ms
+
+slower then:
+
+for (a <- 1 to 1000)
+  for (b <- 1 to 1000 - a)
+    for (c <- 1 to 1000 - a - b)
+      if (a * a + b * b == c * c)
+        if (a + b + c == 1000)
+          println((a, b, c, a * b * c))
+62 ms
+
+If I understand correct this should be the same?
+
+Solution after processing answers:
+
+for (
+  a <- 1 to 1000;
+  b <- 1 to (1000 - a)
+) {
+  val c = (1000 - a - b)
+  if (a * a + b * b == c * c)
+    println((a, b, c, a * b * c))
+}
+9 ms
+
+This is what happens when the condition is in the loop body:
+
+// this
+for(x <- coll) if(condition) doSomething
+// will translate to
+coll.foreach{ x => if(condition) doSomething }
+As opposed to when the condition is in the generator itself:
+
+// this
+for(x <- coll if(condition)) dosomething
+// will translate to
+coll.withFilter(x => condition).foreach{ x => dosomething }
+You can look into The Scala Language Speciﬁcation 6.16 for more details.
